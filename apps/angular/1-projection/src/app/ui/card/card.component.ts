@@ -1,9 +1,13 @@
-import { NgFor, NgIf } from '@angular/common';
-import { Component, Input } from '@angular/core';
-import { randStudent, randTeacher } from '../../data-access/fake-http.service';
-import { StudentStore } from '../../data-access/student.store';
-import { TeacherStore } from '../../data-access/teacher.store';
-import { CardType } from '../../model/card.model';
+import { NgFor, NgTemplateOutlet } from '@angular/common';
+import {
+  AfterViewInit,
+  Component,
+  ContentChild,
+  EventEmitter,
+  Input,
+  Output,
+  TemplateRef,
+} from '@angular/core';
 import { ListItemComponent } from '../list-item/list-item.component';
 
 @Component({
@@ -12,50 +16,48 @@ import { ListItemComponent } from '../list-item/list-item.component';
     <div
       class="flex w-fit flex-col gap-3 rounded-md border-2 border-black p-4"
       [class]="customClass">
-      <img
-        *ngIf="type === CardType.TEACHER"
-        src="assets/img/teacher.png"
-        width="200px" />
-      <img
-        *ngIf="type === CardType.STUDENT"
-        src="assets/img/student.webp"
-        width="200px" />
+      <img [src]="imgSrc" width="200px" />
 
       <section>
+        <ng-template #defaultItemTemplate let-value>
+          {{ value.text || value.name || value.id || value.toString() }}
+        </ng-template>
         <app-list-item
           *ngFor="let item of list"
-          [name]="item.firstName"
-          [id]="item.id"
-          [type]="type"></app-list-item>
+          [item]="item"
+          (delete)="delete.emit($event)">
+          <ng-container
+            *ngTemplateOutlet="
+              itemTemplate ? itemTemplate : defaultItemTemplate;
+              context: { $implicit: item }
+            " />
+        </app-list-item>
       </section>
 
       <button
         class="rounded-sm border border-blue-500 bg-blue-300 p-2"
-        (click)="addNewItem()">
+        (click)="addNewItem.emit()">
         Add
       </button>
     </div>
   `,
   standalone: true,
-  imports: [NgIf, NgFor, ListItemComponent],
+  imports: [NgFor, ListItemComponent, NgTemplateOutlet],
 })
-export class CardComponent {
+export class CardComponent implements AfterViewInit {
   @Input() list: any[] | null = null;
-  @Input() type!: CardType;
+
   @Input() customClass = '';
+  @Input() imgSrc = '';
 
-  CardType = CardType;
+  @Output() delete = new EventEmitter<unknown>();
+  @Output() addNewItem = new EventEmitter();
 
-  constructor(
-    private teacherStore: TeacherStore,
-    private studentStore: StudentStore,
-  ) {}
+  @ContentChild(TemplateRef) itemTemplate!: TemplateRef<unknown>;
 
-  addNewItem() {
-    if (this.type === CardType.TEACHER) {
-      this.teacherStore.addOne(randTeacher());
-    } else if (this.type === CardType.STUDENT) {
-      this.studentStore.addOne(randStudent());
+  ngAfterViewInit() {
+    if (!this.itemTemplate) {
+      console.warn('CardComponent: item template not specified. Default used.');
     }
   }
 }
