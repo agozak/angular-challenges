@@ -44,16 +44,20 @@ import { ListItemComponent } from '../list-item/list-item.component';
   standalone: true,
   imports: [NgFor, ListItemComponent, NgTemplateOutlet],
 })
-export class CardComponent implements AfterViewInit {
-  @Input() list: any[] | null = null;
+export class CardComponent<
+  _ItemType,
+  _TemplateType extends { $implicit: _ItemType },
+> implements AfterViewInit
+{
+  @Input() list: _ItemType[] | null = null;
 
   @Input() customClass = '';
   @Input() imgSrc = '';
 
-  @Output() delete = new EventEmitter<unknown>();
+  @Output() delete = new EventEmitter<_ItemType>();
   @Output() addNewItem = new EventEmitter();
 
-  @ContentChild(TemplateRef) itemTemplate!: TemplateRef<unknown>;
+  @ContentChild(TemplateRef) itemTemplate!: TemplateRef<_TemplateType>;
 
   ngAfterViewInit() {
     if (!this.itemTemplate) {

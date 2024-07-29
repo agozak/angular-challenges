@@ -12,8 +12,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   `,
   standalone: true,
 })
-export class ListItemComponent {
-  @Input() item: unknown;
+export class ListItemComponent<_ItemType> {
+  @Input() item!: _ItemType;
 
-  @Output() delete = new EventEmitter<unknown>();
+  @Output() delete = new EventEmitter<_ItemType>();
 }
